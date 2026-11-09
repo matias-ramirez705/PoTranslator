@@ -1,0 +1,5 @@
+# Normalizar archivos de texto como LF en el repositorio
+* text=auto
+
+# Los .bat de Windows deben llevar finales de línea CRLF al extraerse
+*.bat text eol=crlf
