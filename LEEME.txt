@@ -86,16 +86,35 @@ PROBLEMAS FRECUENTES
   python.org marcando "tcl/tk and IDLE".
 - Error de polib: ejecuta  pip install polib  (aunque no debería hacer
   falta, polib.py ya va incluido).
+- El .exe compilado no abre: puede ser el antivirus o SmartScreen
+  ("Windows protegió tu PC" -> "Más información" -> "Ejecutar de todas
+  formas"); al ser un ejecutable sin firma digital es normal.
+- Para recompilar tras un cambio del código: doble clic en build.bat, o
+  simplemente sube los cambios a GitHub y el .exe se regenera solo
+  (pestaña Actions).
 - La IA cortó la respuesta: baja el "Máx. caracteres por lote"
   (ej.: 6000) y vuelve a preparar el lote.
 - Una fila no se dejó traducir: puede ser una entrada con plurales; esas
   se editan a mano en el editor (avisa cuántas quedaron fuera).
+
+COMPILAR EN .EXE (OPCIONAL)
+----------------------------
+Quieres un único PoTranslator.exe que funcione sin Python instalado?
+- Fácil: doble clic en build.bat. Requiere Python 3.8+; instala PyInstaller
+  solo y deja el ejecutable en dist\PoTranslator.exe (un solo archivo).
+- En GitHub: cada subida a main recompila el .exe automáticamente (pestaña
+  "Actions" del repositorio), y cada etiqueta v1.1, v1.2... crea un
+  "Release" con el .exe listo para descargar y compartir.
 
 ARCHIVOS DE LA CARPETA
 ----------------------
   po_translator.py            la aplicación
   polib.py                    librería gettext (licencia MIT), incluida
   Iniciar PoTranslator.bat    iniciador para Windows
+  build.bat                   compila PoTranslator.exe (necesita Python)
+  PoTranslator.spec           configuración de esa compilación
+  icono.ico / icono.png       icono del ejecutable
   capturas/                   capturas de la app en acción
+  README.md                   esta guía en formato GitHub
 
 Hecha con cariño para tu traducción de BodySlide. ¡Que quede redonda!

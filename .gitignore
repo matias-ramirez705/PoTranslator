@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller (build.bat / GitHub Actions)
+build/
+dist/
+*.spec.bak
+
+# Copias de seguridad de la propia app
+*.bak
+
+# Configuración local de PoTranslator
+.potranslator.json
+
+# Sistema
+.DS_Store
+Thumbs.db
