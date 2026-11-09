@@ -52,7 +52,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 APP_NAME = 'PoTranslator'
-APP_VERSION = '1.0'
+APP_VERSION = '1.1'
 CONFIG_PATH = Path.home() / '.potranslator.json'
 
 CHAT_URLS = {
@@ -93,7 +93,79 @@ DEFAULT_CONFIG = {
     'include_translated': False,
     'chat': 'ChatGPT',
     'geometry': '1280x820',
+    'theme': 'auto',            # 'auto' | 'claro' | 'oscuro'
 }
+
+# ----------------------------------------------------------------------------
+# Paletas de color (tema claro / oscuro)
+# ----------------------------------------------------------------------------
+THEMES = {
+    'claro': {
+        'bg': '#f0f0f0', 'fg': '#000000',
+        'tree_bg': '#ffffff', 'tree_fg': '#000000',
+        'tree_sel': '#0078d7', 'tree_selfg': '#ffffff',
+        'head_bg': '#ebebeb', 'head_fg': '#000000', 'head_active': '#dcdcdc',
+        'row_trans': '#eaf6ea', 'row_fuzzy': '#fdf0dc', 'row_untr': '#fdeaea',
+        'row_obs': '#eeeeee', 'row_obs_fg': '#888888',
+        'text_bg': '#ffffff', 'text_readonly': '#f2f2f2', 'text_fg': '#000000',
+        'text_sel': '#b3d4fc',
+        'muted': '#666666', 'ok': '#00aa55', 'warn': '#aa6600',
+        'accent': '#0078d7', 'menu_bg': '#f0f0f0',
+        'btn': '#e1e1e1', 'btn_active': '#d5e3f8',
+        'border': '#c9c9c9', 'insert': '#000000',
+    },
+    'oscuro': {
+        'bg': '#1e1f24', 'fg': '#e4e4e7',
+        'tree_bg': '#25262b', 'tree_fg': '#e4e4e7',
+        'tree_sel': '#3d5a8a', 'tree_selfg': '#ffffff',
+        'head_bg': '#2d2e34', 'head_fg': '#c8c8cc', 'head_active': '#35363d',
+        'row_trans': '#243824', 'row_fuzzy': '#3a3122', 'row_untr': '#3a2726',
+        'row_obs': '#26272c', 'row_obs_fg': '#8a8a90',
+        'text_bg': '#25262b', 'text_readonly': '#202125', 'text_fg': '#e4e4e7',
+        'text_sel': '#3d5a8a',
+        'muted': '#9b9ba3', 'ok': '#66c88a', 'warn': '#e2a75e',
+        'accent': '#4a7dd8', 'menu_bg': '#25262b',
+        'btn': '#33343b', 'btn_active': '#3d3e46',
+        'border': '#3a3b42', 'insert': '#e4e4e7',
+    },
+}
+
+
+def _detect_system_dark():
+    """True si el sistema operativo esta en modo oscuro (si no se sabe, False)."""
+    if sys.platform == 'win32':
+        try:
+            import winreg
+            with winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    r'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize') as k:
+                val, _ = winreg.QueryValueEx(k, 'AppsUseLightTheme')
+            return int(val) == 0
+        except Exception:
+            return False
+    if sys.platform == 'darwin':
+        try:
+            out = subprocess.run(['defaults', 'read', '-g', 'AppleInterfaceStyle'],
+                                 capture_output=True, text=True, timeout=2)
+            return 'Dark' in (out.stdout or '')
+        except Exception:
+            return False
+    # Linux y demas: preguntar a GNOME/KDE si hay respuesta
+    try:
+        out = subprocess.run(['gsettings', 'get', 'org.gnome.desktop.interface',
+                              'color-scheme'], capture_output=True, text=True,
+                             timeout=2)
+        if 'prefer-dark' in (out.stdout or ''):
+            return True
+    except Exception:
+        pass
+    try:
+        out = subprocess.run(['gsettings', 'get', 'org.gnome.desktop.interface',
+                              'gtk-theme'], capture_output=True, text=True,
+                             timeout=2)
+        return 'dark' in (out.stdout or '').lower()
+    except Exception:
+        return False
 
 BATCH_INSTRUCTION = (
     'Traduce cada línea y responde SOLO con la traducción en el formato '
@@ -481,6 +553,7 @@ class PoTranslatorApp(tk.Tk):
         self.title('%s %s' % (APP_NAME, APP_VERSION))
         self.cfg = dict(DEFAULT_CONFIG)
         self._load_config()
+        self._resolve_theme()
 
         self.po = None
         self.po_path = None
@@ -508,14 +581,14 @@ class PoTranslatorApp(tk.Tk):
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self):
-        style = ttk.Style(self)
+        self.style = ttk.Style(self)
         for theme in ('vista', 'xpnative', 'clam'):
-            if theme in style.theme_names():
-                style.theme_use(theme)
+            if theme in self.style.theme_names():
+                self.style.theme_use(theme)
                 break
-        style.configure('Treeview', rowheight=24)
-        style.configure('TButton', padding=(10, 4))
-        style.configure('Big.TButton', font=('', 10, 'bold'), padding=(14, 6))
+        self.style.configure('Treeview', rowheight=24)
+        self.style.configure('TButton', padding=(10, 4))
+        self.style.configure('Big.TButton', font=('', 10, 'bold'), padding=(14, 6))
 
         self._build_menu()
 
@@ -529,7 +602,8 @@ class PoTranslatorApp(tk.Tk):
         ttk.Button(bar, text='Guardar .po', command=self.save_po).pack(side='left')
         ttk.Button(bar, text='Guardar como...', command=self.save_po_as).pack(side='left', padx=(6, 0))
         ttk.Button(bar, text='Compilar .mo', command=self.compile_mo).pack(side='left', padx=(6, 0))
-        self.lbl_file = ttk.Label(bar, text='(ningún archivo abierto)', foreground='#666')
+        self.lbl_file = ttk.Label(bar, text='(ningún archivo abierto)',
+                                  foreground=self.theme['muted'])
         self.lbl_file.pack(side='right')
 
         # ---- filtros
@@ -551,7 +625,7 @@ class PoTranslatorApp(tk.Tk):
                         command=self.refresh_tree).pack(side='left', padx=(0, 10))
         ttk.Button(fbar, text='Seleccionar filtradas', command=self.select_filtered
                    ).pack(side='left')
-        self.lbl_sel = ttk.Label(fbar, text='', foreground='#666')
+        self.lbl_sel = ttk.Label(fbar, text='', foreground=self.theme['muted'])
         self.lbl_sel.pack(side='left', padx=10)
 
         # ---- notebook inferior y barra de estado (se reservan desde abajo
@@ -562,7 +636,7 @@ class PoTranslatorApp(tk.Tk):
         self.lbl_counts.pack(side='left')
         self.progress = ttk.Progressbar(sbar, length=170, mode='determinate')
         self.progress.pack(side='right')
-        self.lbl_batch_state = ttk.Label(sbar, text='', foreground='#0a5')
+        self.lbl_batch_state = ttk.Label(sbar, text='', foreground=self.theme['ok'])
         self.lbl_batch_state.pack(side='right', padx=14)
 
         self.nb = ttk.Notebook(self)
@@ -589,10 +663,11 @@ class PoTranslatorApp(tk.Tk):
         wrapper.rowconfigure(0, weight=1)
         wrapper.columnconfigure(0, weight=1)
 
-        self.tree.tag_configure('trans', background='#eaf6ea')
-        self.tree.tag_configure('fuzzy', background='#fdf0dc')
-        self.tree.tag_configure('untr', background='#fdeaea')
-        self.tree.tag_configure('obs', background='#eeeeee', foreground='#888888')
+        self.tree.tag_configure('trans', background=self.theme['row_trans'])
+        self.tree.tag_configure('fuzzy', background=self.theme['row_fuzzy'])
+        self.tree.tag_configure('untr', background=self.theme['row_untr'])
+        self.tree.tag_configure('obs', background=self.theme['row_obs'],
+                                foreground=self.theme['row_obs_fg'])
 
         self.tree.bind('<<TreeviewSelect>>', self._on_tree_select)
         self.tree.bind('<Double-1>', self._on_tree_double)
@@ -608,6 +683,132 @@ class PoTranslatorApp(tk.Tk):
         self.bind('<Control-Return>', lambda e: self.apply_editor())
         self.bind('<Control-Down>', lambda e: self.nav_entry(1))
         self.bind('<Control-Up>', lambda e: self.nav_entry(-1))
+
+        self._apply_theme()
+
+    # --------------------------------------------------------------- tema
+    def _resolve_theme(self):
+        pref = self.cfg.get('theme', 'auto')
+        if pref in THEMES:
+            self.theme_name = pref
+        else:
+            self.theme_name = 'oscuro' if _detect_system_dark() else 'claro'
+        self.theme = THEMES[self.theme_name]
+
+    def set_theme(self, pref):
+        self.var_theme.set(pref)
+        self.cfg['theme'] = pref
+        self._save_config()
+        self._resolve_theme()
+        self._apply_theme()
+
+    def _apply_theme(self):
+        t = self.theme
+        s = self.style
+        if self.theme_name == 'oscuro':
+            # en oscuro se usa 'clam', el unico tema ttk que admite colores
+            # completos de forma fiable en Windows/Linux/macOS
+            if 'clam' in s.theme_names():
+                s.theme_use('clam')
+        else:
+            # en claro se recupera el tema nativo (vista/xpnative en Windows);
+            # en sistemas sin tema nativo se queda en 'clam' y los colores
+            # de abajo lo dejan con el aspecto claro correcto
+            for name in ('vista', 'xpnative', 'clam'):
+                if name in s.theme_names():
+                    s.theme_use(name)
+                    break
+        # configuracion completa de estilos con la paleta vigente: en temas
+        # nativos (vista/xpnative) casi todo se ignora y manda el dibujado
+        # nativo de Windows; en 'clam' se aplica al 100%
+        s.configure('.', background=t['bg'], foreground=t['fg'],
+                    fieldbackground=t['tree_bg'], bordercolor=t['border'],
+                    lightcolor=t['border'], darkcolor=t['border'],
+                    troughcolor=t['text_readonly'], arrowcolor=t['fg'],
+                    selectbackground=t['text_sel'], selectforeground='#ffffff')
+        s.configure('TFrame', background=t['bg'])
+        s.configure('TLabel', background=t['bg'], foreground=t['fg'])
+        s.configure('TLabelframe', background=t['bg'], bordercolor=t['border'],
+                    lightcolor=t['border'], darkcolor=t['border'])
+        s.configure('TLabelframe.Label', background=t['bg'], foreground=t['fg'])
+        s.configure('TButton', background=t['btn'], foreground=t['fg'],
+                    bordercolor=t['border'], lightcolor=t['btn'],
+                    darkcolor=t['btn'], padding=(10, 4))
+        s.map('TButton',
+              background=[('disabled', t['bg']), ('pressed', t['btn_active']),
+                          ('active', t['btn_active'])],
+              foreground=[('disabled', t['muted'])])
+        s.configure('Big.TButton', font=('', 10, 'bold'), padding=(14, 6))
+        s.configure('TEntry', fieldbackground=t['text_bg'],
+                    foreground=t['text_fg'], insertcolor=t['insert'],
+                    bordercolor=t['border'], lightcolor=t['border'],
+                    darkcolor=t['border'], selectbackground=t['text_sel'])
+        s.configure('TCombobox', fieldbackground=t['tree_bg'],
+                    foreground=t['fg'], arrowcolor=t['fg'],
+                    bordercolor=t['border'], lightcolor=t['border'],
+                    darkcolor=t['border'], selectbackground=t['text_sel'])
+        s.map('TCombobox',
+              fieldbackground=[('readonly', t['tree_bg'])],
+              foreground=[('readonly', t['fg'])],
+              arrowcolor=[('active', t['fg'])])
+        s.configure('TCheckbutton', background=t['bg'], foreground=t['fg'],
+                    focuscolor=t['bg'])
+        s.map('TCheckbutton', background=[('active', t['bg'])])
+        s.configure('Treeview', background=t['tree_bg'],
+                    foreground=t['tree_fg'], fieldbackground=t['tree_bg'],
+                    rowheight=24, bordercolor=t['border'])
+        s.map('Treeview',
+              background=[('selected', t['tree_sel'])],
+              foreground=[('selected', t['tree_selfg'])])
+        s.configure('Treeview.Heading', background=t['head_bg'],
+                    foreground=t['head_fg'], relief='flat', padding=(6, 4))
+        s.map('Treeview.Heading', background=[('active', t['head_active'])])
+        s.configure('TNotebook', background=t['bg'], borderwidth=0,
+                    tabmargins=(8, 6, 8, 0))
+        s.configure('TNotebook.Tab', background=t['text_readonly'],
+                    foreground=t['fg'], padding=(14, 6))
+        s.map('TNotebook.Tab', background=[('selected', t['tree_bg'])])
+        s.configure('TProgressbar', troughcolor=t['text_readonly'],
+                    background=t['accent'], lightcolor=t['accent'],
+                    darkcolor=t['accent'], bordercolor=t['bg'])
+        s.configure('TScrollbar', background=t['head_bg'],
+                    troughcolor=t['bg'], bordercolor=t['bg'],
+                    arrowcolor=t['fg'], lightcolor=t['head_bg'],
+                    darkcolor=t['head_bg'])
+        s.configure('TSeparator', background=t['border'])
+        # menus
+        for menu in self._menus:
+            try:
+                menu.config(background=t['menu_bg'], foreground=t['fg'],
+                            activebackground=t['accent'],
+                            activeforeground='#ffffff')
+            except Exception:
+                pass
+
+        # colores a nivel de widget (siempre, para ambos temas)
+        self.configure(background=t['bg'])
+        self.lbl_file.configure(foreground=t['muted'])
+        self.lbl_sel.configure(foreground=t['muted'])
+        self.lbl_refs.configure(foreground=t['muted'])
+        self.lbl_prompt_chars.configure(foreground=t['muted'])
+        self.lbl_batch_state.configure(foreground=t['ok'])
+        self.tree.tag_configure('trans', background=t['row_trans'])
+        self.tree.tag_configure('fuzzy', background=t['row_fuzzy'])
+        self.tree.tag_configure('untr', background=t['row_untr'])
+        self.tree.tag_configure('obs', background=t['row_obs'],
+                                foreground=t['row_obs_fg'])
+        for w in (self.ed_orig, self.txt_prompt):
+            w.configure(background=t['text_readonly'], foreground=t['text_fg'],
+                        insertbackground=t['insert'],
+                        selectbackground=t['text_sel'])
+        for w in (self.ed_trad, self.txt_result, self.txt_tpl):
+            w.configure(background=t['text_bg'], foreground=t['text_fg'],
+                        insertbackground=t['insert'],
+                        selectbackground=t['text_sel'])
+        for w in self._plural_texts:
+            w.configure(background=t['text_bg'], foreground=t['text_fg'],
+                        insertbackground=t['insert'],
+                        selectbackground=t['text_sel'])
 
     def _build_menu(self):
         m = tk.Menu(self)
@@ -645,10 +846,20 @@ class PoTranslatorApp(tk.Tk):
         bm.add_command(label='Deshacer último lote', command=self.undo_last)
         m.add_cascade(label='Lote', menu=bm)
 
+        vm = tk.Menu(m, tearoff=0)
+        self.var_theme = tk.StringVar(value=self.cfg.get('theme', 'auto'))
+        for valor, texto in (('auto', 'Automático (según el sistema)'),
+                             ('claro', 'Claro'),
+                             ('oscuro', 'Oscuro')):
+            vm.add_radiobutton(label=texto, value=valor, variable=self.var_theme,
+                               command=lambda v=valor: self.set_theme(v))
+        m.add_cascade(label='Ver', menu=vm)
+
         hm = tk.Menu(m, tearoff=0)
         hm.add_command(label='Guía rápida', command=self.show_guide)
         hm.add_command(label='Acerca de…', command=self.show_about)
         m.add_cascade(label='Ayuda', menu=hm)
+        self._menus = (m, fm, em, bm, vm, hm)
         self.config(menu=m)
 
     # -------------------------------------------------- pestaña: editor
@@ -663,7 +874,7 @@ class PoTranslatorApp(tk.Tk):
         self.var_fuzzy = tk.BooleanVar(value=False)
         ttk.Checkbutton(top, text='Fuzzy (revisar)', variable=self.var_fuzzy,
                         command=self.apply_editor).pack(side='right')
-        self.lbl_refs = ttk.Label(top, text='', foreground='#666')
+        self.lbl_refs = ttk.Label(top, text='', foreground=self.theme['muted'])
         self.lbl_refs.pack(side='right', padx=14)
 
         mid = ttk.Frame(tab)
@@ -674,7 +885,10 @@ class PoTranslatorApp(tk.Tk):
         lf_orig = ttk.LabelFrame(mid, text=' Original ', padding=4)
         lf_orig.grid(row=0, column=0, sticky='nsew', padx=(0, 4))
         self.ed_orig = tk.Text(lf_orig, height=5, width=52, wrap='word', state='disabled',
-                               background='#f2f2f2', relief='flat')
+                               background=self.theme['text_readonly'],
+                               foreground=self.theme['text_fg'],
+                               insertbackground=self.theme['insert'],
+                               selectbackground=self.theme['text_sel'], relief='flat')
         sb1 = ttk.Scrollbar(lf_orig, command=self.ed_orig.yview)
         self.ed_orig.configure(yscrollcommand=sb1.set)
         self.ed_orig.pack(side='left', fill='both', expand=True)
@@ -757,14 +971,19 @@ class PoTranslatorApp(tk.Tk):
         lf_prompt = ttk.LabelFrame(r3, text=' Prompt para la IA (se copia al preparar) ',
                                    padding=4)
         self.txt_prompt = tk.Text(lf_prompt, height=8, width=56, wrap='word',
-                                  state='disabled', background='#f2f2f2', relief='flat')
+                                  state='disabled', background=self.theme['text_readonly'],
+                                  foreground=self.theme['text_fg'],
+                                  insertbackground=self.theme['insert'],
+                                  selectbackground=self.theme['text_sel'],
+                                  relief='flat')
         sbp = ttk.Scrollbar(lf_prompt, command=self.txt_prompt.yview)
         self.txt_prompt.configure(yscrollcommand=sbp.set)
         self.txt_prompt.pack(side='top', fill='both', expand=True)
         sbp.pack(side='right', fill='y')
         pb = ttk.Frame(lf_prompt)
         pb.pack(fill='x', pady=(4, 0))
-        self.lbl_prompt_chars = ttk.Label(pb, text='0 caracteres', foreground='#666')
+        self.lbl_prompt_chars = ttk.Label(pb, text='0 caracteres',
+                                          foreground=self.theme['muted'])
         self.lbl_prompt_chars.pack(side='left')
         ttk.Button(pb, text='Copiar todo', command=self.copy_prompt).pack(side='right')
 
@@ -923,7 +1142,7 @@ class PoTranslatorApp(tk.Tk):
             return
         self.lbl_batch_state.config(
             text='.mo compilado (%s)' % datetime.now().strftime('%H:%M'),
-            foreground='#0a5')
+            foreground=self.theme['ok'])
 
     # ------------------------------------------------------------- tabla
     def _on_search_key(self, _event):
@@ -1107,7 +1326,7 @@ class PoTranslatorApp(tk.Tk):
         text = '\n'.join(self.entries[i].msgid for i in idxs)
         self._to_clipboard(text)
         self.lbl_batch_state.config(text='%d originales copiados' % len(idxs),
-                                    foreground='#0a5')
+                                    foreground=self.theme['ok'])
 
     def _after_bulk(self, idxs):
         for i in idxs:
@@ -1156,8 +1375,11 @@ class PoTranslatorApp(tk.Tk):
         lf.columnconfigure(1, weight=1)
         ttk.Label(lf, text='msgid_plural (original):').grid(row=0, column=0, sticky='nw',
                                                             padx=(0, 8))
-        tp = tk.Text(lf, height=2, wrap='word', state='disabled', background='#f2f2f2',
-                     relief='flat')
+        tp = tk.Text(lf, height=2, wrap='word', state='disabled',
+                     background=self.theme['text_readonly'],
+                     foreground=self.theme['text_fg'],
+                     insertbackground=self.theme['insert'],
+                     selectbackground=self.theme['text_sel'], relief='flat')
         tp.insert('1.0', e.msgid_plural)
         tp.config(state='disabled')
         tp.grid(row=0, column=1, sticky='ew', pady=2)
@@ -1166,7 +1388,11 @@ class PoTranslatorApp(tk.Tk):
             lab = 'msgstr[%d] (%s):' % (i, labels.get(i, 'forma %d' % i))
             ttk.Label(lf, text=lab).grid(row=i + 1, column=0, sticky='nw', padx=(0, 8),
                                          pady=(4, 0))
-            t = tk.Text(lf, height=2, wrap='word', undo=True)
+            t = tk.Text(lf, height=2, wrap='word', undo=True,
+                        background=self.theme['text_bg'],
+                        foreground=self.theme['text_fg'],
+                        insertbackground=self.theme['insert'],
+                        selectbackground=self.theme['text_sel'])
             t.insert('1.0', (e.msgstr_plural or {}).get(str(i), ''))
             t.grid(row=i + 1, column=1, sticky='ew', pady=2)
             self._plural_texts.append(t)
@@ -1265,7 +1491,7 @@ class PoTranslatorApp(tk.Tk):
         if skipped:
             self.lbl_batch_state.config(
                 text='Ojo: %d entradas con plurales quedaron fuera del lote '
-                     '(edítalas a mano)' % skipped, foreground='#a60')
+                     '(edítalas a mano)' % skipped, foreground=self.theme['warn'])
 
     def next_batch(self):
         if not self.queue:
@@ -1293,7 +1519,7 @@ class PoTranslatorApp(tk.Tk):
         remaining = len(self.queue) - self.queue_pos
         self.lbl_batch_state.config(
             text='Lote %d: %d entradas · quedan %d en la cola'
-                 % (self.batch_no, len(items), remaining), foreground='#0a5')
+                 % (self.batch_no, len(items), remaining), foreground=self.theme['ok'])
         self._to_clipboard(prompt)
         self.nb.select(self.ai_tab)
 
@@ -1364,7 +1590,7 @@ class PoTranslatorApp(tk.Tk):
             else:
                 self.lbl_batch_state.config(
                     text='Cola completada: guarda el .po y compila el .mo',
-                    foreground='#0a5')
+                    foreground=self.theme['ok'])
                 if not missing and not empties:
                     messagebox.showinfo(
                         APP_NAME, 'Aplicadas %d traducciones%s.\n\n'
@@ -1372,11 +1598,11 @@ class PoTranslatorApp(tk.Tk):
                         parent=self)
         else:
             self.lbl_batch_state.config(
-                text='Aplicadas %d traducciones%s' % (applied, note), foreground='#0a5')
+                text='Aplicadas %d traducciones%s' % (applied, note), foreground=self.theme['ok'])
         if missing_txt:
             self.lbl_batch_state.config(
                 text=('Aplicadas %d%s' % (applied, note)) + missing_txt.replace('\n', ' · '),
-                foreground='#a60')
+                foreground=self.theme['warn'])
 
     def undo_last(self):
         if not self.undo_stack:
@@ -1396,7 +1622,7 @@ class PoTranslatorApp(tk.Tk):
         if self.current_idx is not None:
             self.load_editor(self.current_idx)
         self.lbl_batch_state.config(text='Deshechas %d entradas' % len(snaps),
-                                    foreground='#a60')
+                                    foreground=self.theme['warn'])
 
     def open_chat(self):
         url = CHAT_URLS.get(self.var_chat.get())
@@ -1485,6 +1711,8 @@ class PoTranslatorApp(tk.Tk):
             'include_translated': bool(self.var_include_tr.get()),
             'chat': self.var_chat.get(),
             'geometry': self.geometry(),
+            'theme': self.var_theme.get() if hasattr(self, 'var_theme')
+                     else self.cfg.get('theme', 'auto'),
         })
         try:
             with open(CONFIG_PATH, 'w', encoding='utf-8') as fh:

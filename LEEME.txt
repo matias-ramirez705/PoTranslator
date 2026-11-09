@@ -1,4 +1,4 @@
-﻿PoTranslator 1.0 — Editor de traducciones .po / .pot / .mo con IA
+﻿PoTranslator 1.1 — Editor de traducciones .po / .pot / .mo con IA
 ================================================================
 
 App de escritorio (Python + tkinter) para actualizar, editar y guardar
@@ -32,6 +32,10 @@ GUÍA RÁPIDA
          con el texto anterior visible en el comentario "#| msgid",
        * las cadenas nuevas quedan vacías,
        * las cadenas eliminadas se guardan como obsoletas (#~) al final.
+
+   NOTA: si usas Windows en modo oscuro, la app arranca oscura sola.
+   Puedes cambiarlo en cualquier momento en el menú "Ver > Tema"
+   (Automático / Claro / Oscuro) y la elección se recuerda.
 
 2) TRADUCIR EN MASA CON LA IA (pestaña "Traducción IA por lotes")
    - En el filtro de arriba elige "Sin traducir" (o "Con fuzzy" para
