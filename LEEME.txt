@@ -1,0 +1,101 @@
+﻿PoTranslator 1.0 — Editor de traducciones .po / .pot / .mo con IA
+================================================================
+
+App de escritorio (Python + tkinter) para actualizar, editar y guardar
+traducciones gettext, con un flujo de traducción masiva por lotes usando
+la IA que tú elijas (ChatGPT, Claude, Gemini, Copilot...), igual que tu
+herramienta "ESP translate": copias el prompt, la IA traduce, pegas la
+respuesta y la app reemplaza las líneas.
+
+REQUISITOS
+----------
+- Python 3.8 o superior, instalado desde https://www.python.org/downloads/
+  (el instalador de python.org ya incluye tkinter; si usas otra versión,
+  asegúrate de marcar "tcl/tk and IDLE" durante la instalación).
+- Nada más: polib (polib.py) viene incluido en esta carpeta.
+
+CÓMO EJECUTARLA
+---------------
+- Windows: doble clic en "Iniciar PoTranslator.bat"
+  (o: clic derecho sobre po_translator.py -> Abrir con -> Python)
+- Linux/macOS:  python3 po_translator.py
+
+GUÍA RÁPIDA
+-----------
+
+1) ABRIR / ACTUALIZAR TU TRADUCCIÓN
+   - "Abrir .po..." y elige tu archivo (también acepta .pot y .mo).
+   - "Actualizar desde POT..." y elige la plantilla nueva del programa.
+     La app fusiona al estilo msgmerge:
+       * tus traducciones exactas se conservan,
+       * los textos que cambiaron quedan marcados como "fuzzy" (revisar)
+         con el texto anterior visible en el comentario "#| msgid",
+       * las cadenas nuevas quedan vacías,
+       * las cadenas eliminadas se guardan como obsoletas (#~) al final.
+
+2) TRADUCIR EN MASA CON LA IA (pestaña "Traducción IA por lotes")
+   - En el filtro de arriba elige "Sin traducir" (o "Con fuzzy" para
+     re-traducir las que cambiaron).
+   - Pulsa "Preparar lote". Usará las entradas filtradas (o solo las que
+     selecciones en la tabla con Ctrl+clic / Mayús+clic).
+   - El prompt queda copiado en tu portapapeles. Pégalo en tu chat de IA
+     favorito (el botón "Abrir chat" abre ChatGPT, Claude, Gemini...).
+   - Copia la respuesta de la IA y pégala en el panel derecho
+     "Respuesta de la IA (pega aquí)".
+   - Pulsa "Aplicar y siguiente lote": cada línea "N) traducción"
+     reemplaza su entrada, se limpia el flag fuzzy y se prepara
+     automáticamente el lote siguiente (respetando el máximo de
+     caracteres por lote para que la IA no corte la respuesta).
+   - Repite hasta que la cola se acabe. Si te equivocas:
+     "Deshacer último lote".
+
+3) EDICIÓN MANUAL (pestaña "Editor de entrada")
+   - Doble clic en cualquier fila de la tabla.
+   - "Copiar original a traducción" sirve para números o términos que no
+     se traducen (ej.: "0.100").
+   - Clic derecho en la tabla: acciones en masa (copiar original, borrar
+     traducción, marcar/quitar fuzzy, copiar originales al portapapeles).
+
+4) GUARDAR
+   - "Guardar .po" escribe el catálogo (crea copia .bak antes).
+   - "Compilar .mo" genera el binario que lee el programa.
+     BodySlide: reemplaza tu BodySlide.mo actual en la carpeta de idioma
+     (p. ej. BodySlide/lang/es/BodySlide.mo o donde lo tengas instalado).
+
+DETALLES TÉCNICOS
+-----------------
+- Los textos multilínea viajan en el prompt con "\n" literal y la app
+  los reconvierte sola al aplicar la respuesta.
+- El parseo de la respuesta tolera: bloques de código ```...```,
+  numeración "1)" "1." "1 -" "[1]" "(1)", negritas **1)**, comillas
+  envolventes, líneas vacías y separadores decorativos. Si la IA respeta
+  el orden pero no numera, se asigna por posición (se avisa en pantalla).
+- Marcadores protegidos por la plantilla del prompt: %s, %d, %lu,
+  {{PLACEHOLDER}}, \n, & de atajos de menú.
+- El .mo se compila como msgfmt: SOLO entran las entradas traducidas y
+  revisadas (las fuzzy y vacías quedan fuera y el programa mostrará el
+  texto original en inglés hasta que las traduzcas/confirmes).
+- La plantilla del prompt, el separador, el máximo de caracteres y el
+  chat preferido se guardan automáticamente en ~/.potranslator.json
+- Formato de numeración por lote: "N) texto", una entrada por línea,
+  igual que "texto para IA" de ESP translate.
+
+PROBLEMAS FRECUENTES
+--------------------
+- "No se pudo conectar" / tkinter no aparece: reinstala Python desde
+  python.org marcando "tcl/tk and IDLE".
+- Error de polib: ejecuta  pip install polib  (aunque no debería hacer
+  falta, polib.py ya va incluido).
+- La IA cortó la respuesta: baja el "Máx. caracteres por lote"
+  (ej.: 6000) y vuelve a preparar el lote.
+- Una fila no se dejó traducir: puede ser una entrada con plurales; esas
+  se editan a mano en el editor (avisa cuántas quedaron fuera).
+
+ARCHIVOS DE LA CARPETA
+----------------------
+  po_translator.py            la aplicación
+  polib.py                    librería gettext (licencia MIT), incluida
+  Iniciar PoTranslator.bat    iniciador para Windows
+  capturas/                   capturas de la app en acción
+
+Hecha con cariño para tu traducción de BodySlide. ¡Que quede redonda!
