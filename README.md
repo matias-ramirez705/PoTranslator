@@ -35,6 +35,8 @@ sitio. Cero configuración: solo tu navegador y el portapapeles.
   acciones en masa con clic derecho.
 - **Compilación .mo igual que `msgfmt`** — solo entran las cadenas traducidas
   y revisadas (las *fuzzy* y vacías quedan fuera).
+- **Tema oscuro** — se ajusta solo al modo oscuro de Windows y se puede
+  cambiar en vivo desde el menú **Ver → Tema** (Automático / Claro / Oscuro).
 - **Deshacer por lotes** y copias de seguridad `.bak` automáticas.
 - 100 % Python estándar (tkinter) con polib incluida: sin dependencias.
 
@@ -68,6 +70,8 @@ python po_translator.py        (o doble clic en "Iniciar PoTranslator.bat")
 | 6 | Repite hasta vaciar la cola y pulsa **Compilar .mo**. |
 
 ![Traducción por lotes con IA](capturas/app_ia.png)
+
+![Modo oscuro](capturas/app_oscuro.png)
 
 Consejos:
 
