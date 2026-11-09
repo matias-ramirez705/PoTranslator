@@ -52,7 +52,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 APP_NAME = 'PoTranslator'
-APP_VERSION = '1.1'
+APP_VERSION = '1.2.1'
 CONFIG_PATH = Path.home() / '.potranslator.json'
 
 CHAT_URLS = {

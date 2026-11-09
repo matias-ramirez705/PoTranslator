@@ -9,6 +9,8 @@
 #  - polib.py se empaqueta solo (está junto al script y se importa normal)
 #  - tkinter forma parte de Python estándar, no hay nada extra que añadir
 #  - upx=False: evita falsos positivos de antivirus
+#  - version.txt: metadatos del ejecutable (producto, autor, descripcion),
+#    tambien reduce falsos positivos de antivirus
 # ============================================================================
 
 
@@ -47,4 +49,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=['icono.ico'],
+    version='version.txt',
 )

@@ -1,0 +1,37 @@
+# UTF-8
+#
+# Recursos de version para PoTranslator.exe (lo lee PoTranslator.spec).
+# Anade metadatos visibles del ejecutable (descripcion, producto, autor...):
+# los antivirus dan menos falsos positivos cuando el PE esta identificado
+# como un producto real y no es un binario anonimo.
+#
+# Ojo: mantener en ASCII (sin acentos) y sincronizado con APP_VERSION
+# de po_translator.py.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(1, 2, 1, 0),
+    prodvers=(1, 2, 1, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        u'040904B0',
+        [StringStruct(u'CompanyName', u'Matias Ramirez'),
+        StringStruct(u'FileDescription', u'PoTranslator - Editor de traducciones PO/POT/MO con IA (portable)'),
+        StringStruct(u'FileVersion', u'1.2.1.0'),
+        StringStruct(u'InternalName', u'PoTranslator'),
+        StringStruct(u'LegalCopyright', u'Copyright (c) 2025 Matias Ramirez - MIT License'),
+        StringStruct(u'OriginalFilename', u'PoTranslator.exe'),
+        StringStruct(u'ProductName', u'PoTranslator'),
+        StringStruct(u'ProductVersion', u'1.2.1.0')])
+      ]),
+    VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
+  ]
+)

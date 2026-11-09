@@ -49,6 +49,47 @@ sitio. Cero configuración: solo tu navegador y el portapapeles.
 El `.exe` se compila automáticamente con GitHub Actions cada vez que se
 publica una versión nueva (ver más abajo).
 
+## ⚠️ ¿Tu antivirus marca `PoTranslator.exe` como virus?
+
+Es un **falso positivo**, muy típico en programas Python compilados con
+PyInstaller (archivo único, sin firma digital y recién publicados): varios
+motores heurísticos los marcan hasta que acumulan reputación. No le pasa solo
+a PoTranslator — le pasa a muchísimos proyectos open source.
+
+PoTranslator **no contiene código malicioso**: no hace descargas ni envía
+datos, y todo el código fuente está en este repositorio para que cualquiera
+lo revise. Si prefieres, compila tu propio `.exe` con `build.bat`.
+
+### Verificar tu copia
+
+Cada Release incluye `PoTranslator.exe.sha256`, el hash oficial del
+ejecutable. Compáralo en PowerShell:
+
+```powershell
+Get-FileHash .\PoTranslator.exe -Algorithm SHA256
+```
+
+### Reportar el falso positivo (gratis y ayuda a todos)
+
+- **Microsoft Defender / SmartScreen**: <https://www.microsoft.com/en-us/wdsi/filesubmission>
+- **Bkav**: correo a fpreport@bkav.com
+- **SecureAge**: <https://www.secureage.com/support/report-false-positive>
+- **Arctic Wolf**: correo a virustotal@arcticwolf.com (incluye el enlace de
+  VirusTotal y el SHA-256 del archivo)
+- **Skyhigh**: portal <https://success.skyhighsecurity.com> (artículo
+  «Malware Submission — false positive samples»)
+- **SentinelOne**: solo acepta reportes de clientes enterprise (portal de
+  soporte); las detecciones «Static AI» suelen desaparecer solas cuando el
+  archivo acumula descargas limpias.
+
+Si tu antivirus lo detecta, abre un *issue* indicando cuál y qué mensaje
+muestra, así llevamos un registro.
+
+> **Nota:** la solución definitiva es firmar el `.exe` con un certificado de
+> código (p. ej. el *Open Source Code Signing* de Certum, ~$58/año, o gratis
+> para proyectos open source con la
+> [SignPath Foundation](https://signpath.org)). Es el plan a futuro.
+
 ## Ejecutar con Python (Windows / Linux / macOS)
 
 Requisito: Python 3.8 o superior. En Windows, el instalador de
@@ -91,7 +132,8 @@ El repositorio ya incluye el *workflow* `.github/workflows/build.yml`:
   pestaña **Actions** → última ejecución → artefacto `PoTranslator-exe`
   (los artefactos expiran a los 90 días).
 - Cada **etiqueta** `v1.1`, `v1.2`... crea además un **Release** permanente
-  con el `.exe` adjunto, listo para compartir:
+  con el `.exe` y su checksum `PoTranslator.exe.sha256` adjuntos, listos
+  para compartir:
 
   ```
   git tag v1.1
@@ -116,6 +158,7 @@ polib.py                      Librería gettext (MIT), incluida
 Iniciar PoTranslator.bat      Iniciador para Windows (con Python)
 build.bat                     Compila PoTranslator.exe (PyInstaller)
 PoTranslator.spec             Configuración de la compilación
+version.txt                   Metadatos del .exe (menos falsos positivos)
 icono.ico / icono.png         Icono del ejecutable
 capturas/                     Capturas de la app
 .github/workflows/build.yml   Compilación automática (GitHub Actions)
