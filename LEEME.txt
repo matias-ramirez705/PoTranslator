@@ -1,4 +1,4 @@
-﻿PoTranslator 1.3 — Editor de traducciones .po / .pot / .mo con IA
+﻿PoTranslator 1.3.1 — Editor de traducciones .po / .pot / .mo con IA
 ================================================================
 
 App de escritorio (Python + tkinter) para actualizar, editar y guardar
@@ -93,10 +93,14 @@ PROBLEMAS FRECUENTES
 - El antivirus marca el .exe como virus: es un FALSO POSITIVO típico de
   programas Python compilados con PyInstaller (archivo único, sin firma
   digital y recién publicados; detecciones como "BehavesLike.Win64" o
-  "Static AI" son heurísticas). PoTranslator no hace descargas ni envía
-  datos, y su código está en GitHub. Comprueba el hash SHA256 del release
-  y, si quieres, reporta el falso positivo a tu antivirus (enlaces en el
-  README de GitHub).
+  "Gen:Variant.Yogi" apuntan al cargador autoextraíble, no a PoTranslator).
+  Solución rápida: descarga la versión PORTABLE del Release
+  (PoTranslator-portable-win64.zip, descomprime y ejecuta
+  PoTranslator\PoTranslator.exe); al no ser autoextraíble suele pasar
+  casi limpia. PoTranslator no hace descargas ni envía datos, y su código
+  está en GitHub. Comprueba el hash SHA256 del release y, si quieres,
+  reporta el falso positivo a tu antivirus (enlaces en el README de
+  GitHub; el de Bitdefender limpia varios motores a la vez).
 - El .exe no abre por SmartScreen: "Windows protegió tu PC" -> "Más
   información" -> "Ejecutar de todas formas"; al ser un ejecutable sin
   firma digital es normal.
@@ -114,8 +118,13 @@ Quieres un único PoTranslator.exe que funcione sin Python instalado?
 - Fácil: doble clic en build.bat. Requiere Python 3.8+; instala PyInstaller
   solo y deja el ejecutable en dist\PoTranslator.exe (un solo archivo).
 - En GitHub: cada subida a main recompila el .exe automáticamente (pestaña
-  "Actions" del repositorio), y cada etiqueta v1.1, v1.2... crea un
-  "Release" con el .exe listo para descargar y compartir.
+  "Actions" del repositorio), y cada etiqueta v1.1, v1.3... crea un
+  "Release" con el .exe, la versión portable en ZIP y sus checksums,
+  listos para descargar y compartir.
+- Versión portable (carpeta, menos detecciones de antivirus):
+  python -m PyInstaller PoTranslator-portable.spec --noconfirm
+  (deja la carpeta en dist\PoTranslator\; comprímela en ZIP para
+  compartirla).
 
 ARCHIVOS DE LA CARPETA
 ----------------------
@@ -124,6 +133,7 @@ ARCHIVOS DE LA CARPETA
   Iniciar PoTranslator.bat    iniciador para Windows
   build.bat                   compila PoTranslator.exe (necesita Python)
   PoTranslator.spec           configuración de esa compilación
+  PoTranslator-portable.spec  variante portable en carpeta (onedir)
   version.txt                 metadatos del .exe (menos falsos positivos)
   icono.ico / icono.png       icono del ejecutable
   capturas/                   capturas de la app en acción

@@ -40,11 +40,16 @@ sitio. Cero configuración: solo tu navegador y el portapapeles.
 - **Deshacer por lotes** y copias de seguridad `.bak` automáticas.
 - 100 % Python estándar (tkinter) con polib incluida: sin dependencias.
 
-## Descargar el ejecutable (Windows)
+## Descargar (Windows)
 
 1. Entra en la página de [Releases](../../releases).
-2. Descarga **`PoTranslator.exe`** de la última versión.
-3. Doble clic. No necesita Python ni instalación.
+2. Elige la versión que prefieras:
+   - **`PoTranslator.exe`** — un solo archivo: doble clic y listo.
+   - **`PoTranslator-portable-win64.zip`** — versión portable (carpeta):
+     descomprime y ejecuta `PoTranslator\PoTranslator.exe`. Al no ser un
+     ejecutable autoextraíble suele pasar los antivirus casi limpia
+     (ver la nota de falsos positivos más abajo).
+3. Ninguna de las dos necesita Python ni instalación.
 
 El `.exe` se compila automáticamente con GitHub Actions cada vez que se
 publica una versión nueva (ver más abajo).
@@ -56,14 +61,21 @@ PyInstaller (archivo único, sin firma digital y recién publicados): varios
 motores heurísticos los marcan hasta que acumulan reputación. No le pasa solo
 a PoTranslator — le pasa a muchísimos proyectos open source.
 
+Lo que marcan esas detecciones («BehavesLike.Win64…», «Gen:Variant.Yogi…»)
+es el **cargador autoextraíble** de PyInstaller, no el código de PoTranslator.
+Por eso, si tu antivirus se queja del `.exe` suelto, la salida más rápida es
+la **versión portable** (`PoTranslator-portable-win64.zip`), que no se
+autodescomprime y suele quedar casi limpia.
+
 PoTranslator **no contiene código malicioso**: no hace descargas ni envía
 datos, y todo el código fuente está en este repositorio para que cualquiera
 lo revise. Si prefieres, compila tu propio `.exe` con `build.bat`.
 
 ### Verificar tu copia
 
-Cada Release incluye `PoTranslator.exe.sha256`, el hash oficial del
-ejecutable. Compáralo en PowerShell:
+Cada Release incluye los archivos `.sha256`, el hash oficial de cada
+descarga (`PoTranslator.exe` y `PoTranslator-portable-win64.zip`).
+Compáralo en PowerShell:
 
 ```powershell
 Get-FileHash .\PoTranslator.exe -Algorithm SHA256
@@ -71,13 +83,19 @@ Get-FileHash .\PoTranslator.exe -Algorithm SHA256
 
 ### Reportar el falso positivo (gratis y ayuda a todos)
 
-- **Microsoft Defender / SmartScreen**: <https://www.microsoft.com/en-us/wdsi/filesubmission>
+- **Bitdefender**: <https://www.bitdefender.com/consumer/support/answer/29358/>
+  (o correo a virus_submission@bitdefender.com). *Es el reporte que más
+  convierte:* varios motores que usan su tecnología (eScan, VIPRE, Arcabit,
+  ALYac…) se limpian a la vez.
 - **Bkav**: correo a fpreport@bkav.com
+- **ALYac (ESTsecurity)**: correo a esrc@estsecurity.com
+- **Arcabit**: correo a support@arcabit.com
 - **SecureAge**: <https://www.secureage.com/support/report-false-positive>
 - **Arctic Wolf**: correo a virustotal@arcticwolf.com (incluye el enlace de
   VirusTotal y el SHA-256 del archivo)
 - **Skyhigh**: portal <https://success.skyhighsecurity.com> (artículo
   «Malware Submission — false positive samples»)
+- **Microsoft Defender / SmartScreen**: <https://www.microsoft.com/en-us/wdsi/filesubmission>
 - **SentinelOne**: solo acepta reportes de clientes enterprise (portal de
   soporte); las detecciones «Static AI» suelen desaparecer solas cuando el
   archivo acumula descargas limpias.
@@ -128,12 +146,12 @@ Consejos:
 
 El repositorio ya incluye el *workflow* `.github/workflows/build.yml`:
 
-- Cada **push** a `main` compila un `PoTranslator.exe` nuevo. Descárgalo en la
-  pestaña **Actions** → última ejecución → artefacto `PoTranslator-exe`
+- Cada **push** a `main` compila el `.exe` y la versión portable. Descárgalos
+  en la pestaña **Actions** → última ejecución → artefacto `PoTranslator-exe`
   (los artefactos expiran a los 90 días).
-- Cada **etiqueta** `v1.1`, `v1.2`... crea además un **Release** permanente
-  con el `.exe` y su checksum `PoTranslator.exe.sha256` adjuntos, listos
-  para compartir:
+- Cada **etiqueta** `v1.1`, `v1.3`... crea además un **Release** permanente
+  con el `.exe`, la portable en ZIP y sus checksums `.sha256` adjuntos,
+  listos para compartir:
 
   ```
   git tag v1.1
@@ -150,6 +168,15 @@ el ejecutable se recompila solo en la nube, sin instalar nada.
 Doble clic en **`build.bat`**. Requiere Python 3.8+; el script instala
 PyInstaller él solo y deja el ejecutable en `dist\PoTranslator.exe`.
 
+Para la versión portable (carpeta):
+
+```
+python -m PyInstaller PoTranslator-portable.spec --noconfirm
+```
+
+(deja la carpeta en `dist\PoTranslator\`; para compartirla, comprímela
+en ZIP).
+
 ## Estructura del proyecto
 
 ```
@@ -157,7 +184,8 @@ po_translator.py              La aplicación (un solo archivo)
 polib.py                      Librería gettext (MIT), incluida
 Iniciar PoTranslator.bat      Iniciador para Windows (con Python)
 build.bat                     Compila PoTranslator.exe (PyInstaller)
-PoTranslator.spec             Configuración de la compilación
+PoTranslator.spec             Compilación en archivo único (PyInstaller)
+PoTranslator-portable.spec    Compilación portable en carpeta (onedir)
 version.txt                   Metadatos del .exe (menos falsos positivos)
 icono.ico / icono.png         Icono del ejecutable
 capturas/                     Capturas de la app
