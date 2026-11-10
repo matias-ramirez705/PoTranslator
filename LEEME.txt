@@ -1,4 +1,4 @@
-﻿PoTranslator 1.4 — Editor de traducciones .po / .pot / .mo con IA
+﻿PoTranslator 1.5 — Editor de traducciones .po / .pot / .mo con IA
 ================================================================
 
 App de escritorio (Python + tkinter) para actualizar, editar y guardar
@@ -36,6 +36,19 @@ GUÍA RÁPIDA
    NOTA: si usas Windows en modo oscuro, la app arranca oscura sola.
    Puedes cambiarlo en cualquier momento en el menú "Ver > Tema"
    (Automático / Claro / Oscuro) y la elección se recuerda.
+
+   IDIOMA DE LA INTERFAZ (v1.5)
+   - En el primer arranque la app pregunta el idioma (español, inglés,
+     francés, italiano, portugués, polaco, ruso, chino y japonés),
+     preseleccionando el idioma del sistema.
+   - Después puedes cambiarlo cuando quieras en "Ver > Idioma"; se aplica
+     al instante (sin reiniciar) y se recuerda.
+   - La plantilla del prompt de traducción inicial también viene en el
+     idioma elegido (traduce HACIA ese idioma); luego edítala a gusto.
+   - En la versión portable, todo (idioma incluido) se guarda en
+     PoTranslator\_internal\.potranslator.json dentro de la propia
+     carpeta: la configuración viaja contigo. Desde Python se guarda en
+     ~/.potranslator.json como siempre.
 
 2) TRADUCIR EN MASA CON LA IA (pestaña "Traducción IA por lotes")
    - En el filtro de arriba elige "Sin traducir" (o "Con fuzzy" para
@@ -114,9 +127,11 @@ PROBLEMAS FRECUENTES
 
 COMPILAR EN .EXE (OPCIONAL)
 ----------------------------
-Quieres un único PoTranslator.exe que funcione sin Python instalado?
-- Fácil: doble clic en build.bat. Requiere Python 3.8+; instala PyInstaller
-  solo y deja el ejecutable en dist\PoTranslator.exe (un solo archivo).
+Quieres un PoTranslator.exe que funcione sin Python instalado?
+- Descarga la versión PORTABLE del Release de GitHub
+  (PoTranslator-portable-win64.zip): descomprime y ejecuta
+  PoTranslator\PoTranslator.exe. Todo (idioma, tema, plantilla...) se
+  guarda en _internal, dentro de la carpeta: copiable a un USB.
 - En GitHub: cada subida a main recompila el .exe automáticamente (pestaña
   "Actions" del repositorio), y cada etiqueta v1.1, v1.3... crea un
   "Release" con el .exe, la versión portable en ZIP y sus checksums,

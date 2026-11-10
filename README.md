@@ -37,19 +37,32 @@ sitio. Cero configuración: solo tu navegador y el portapapeles.
   y revisadas (las *fuzzy* y vacías quedan fuera).
 - **Tema oscuro** — se ajusta solo al modo oscuro de Windows y se puede
   cambiar en vivo desde el menú **Ver → Tema** (Automático / Claro / Oscuro).
+- **Interfaz en 9 idiomas** — español, inglés, francés, italiano,
+  portugués, polaco, ruso, chino y japonés. En el primer arranque la app
+  pregunta el idioma (detecta el del sistema); luego se cambia en vivo
+  desde **Ver → Idioma**. La plantilla del prompt de traducción también
+  viene traducida al idioma elegido.
 - **Deshacer por lotes** y copias de seguridad `.bak` automáticas.
 - 100 % Python estándar (tkinter) con polib incluida: sin dependencias.
 
 ## Descargar (Windows)
 
 1. Entra en la página de [Releases](../../releases).
-2. Elige la versión que prefieras:
-   - **`PoTranslator.exe`** — un solo archivo: doble clic y listo.
-   - **`PoTranslator-portable-win64.zip`** — versión portable (carpeta):
-     descomprime y ejecuta `PoTranslator\PoTranslator.exe`. Al no ser un
-     ejecutable autoextraíble suele pasar los antivirus casi limpia
-     (ver la nota de falsos positivos más abajo).
-3. Ninguna de las dos necesita Python ni instalación.
+2. Descarga **`PoTranslator-portable-win64.zip`** (la versión distribuida
+   desde la v1.5): descomprime y ejecuta
+   `PoTranslator\PoTranslator.exe`.
+3. No necesita Python ni instalación.
+
+> La versión de archivo único (`PoTranslator.exe`) se dejó de publicar en
+> la v1.5: al ser un ejecutable autoextraíble sin firma digital, varios
+> antivirus lo marcaban por error (falso positivo). La portable no tiene
+> ese problema. Las versiones antiguas siguen en la página de Releases.
+
+Ajustes portables: en la versión portable la configuración (idioma, tema,
+plantilla del prompt…) se guarda en `PoTranslator\_internal\
+.potranslator.json`, dentro de la propia carpeta: puedes copiar la
+ carpeta a un USB o a otro PC y todo viaja con ella. (Al ejecutar desde
+ Python se guarda en `~/.potranslator.json` como siempre.)
 
 El `.exe` se compila automáticamente con GitHub Actions cada vez que se
 publica una versión nueva (ver más abajo).
@@ -149,9 +162,9 @@ El repositorio ya incluye el *workflow* `.github/workflows/build.yml`:
 - Cada **push** a `main` compila el `.exe` y la versión portable. Descárgalos
   en la pestaña **Actions** → última ejecución → artefacto `PoTranslator-exe`
   (los artefactos expiran a los 90 días).
-- Cada **etiqueta** `v1.1`, `v1.3`... crea además un **Release** permanente
-  con el `.exe`, la portable en ZIP y sus checksums `.sha256` adjuntos,
-  listos para compartir:
+- Cada **etiqueta** `v1.3`, `v1.5`... crea además un **Release** permanente
+  con la portable en ZIP y su checksum `.sha256` adjuntos, listos para
+  compartir:
 
   ```
   git tag v1.1
