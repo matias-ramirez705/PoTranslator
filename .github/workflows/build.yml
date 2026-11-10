@@ -1,11 +1,14 @@
 # ============================================================================
 #  Compila PoTranslator.exe automaticamente en Windows (GitHub Actions).
 #
-#  - Push a main           -> el .exe queda como artefacto de la ejecucion
-#                             (pestana "Actions" -> descargar).
-#  - Etiqueta v1.1, v1.2.. -> ademas crea un Release permanente con el .exe
-#                             y su checksum SHA256 (.sha256) adjuntos.
-#  - workflow_dispatch     -> se puede lanzar a mano desde la pestana Actions.
+#  - Push a main -> artefactos en la pestana "Actions".
+#  - Etiqueta v*  -> Release permanente con CUATRO archivos:
+#      * PoTranslator.exe                 (archivo unico)
+#      * PoTranslator.exe.sha256
+#      * PoTranslator-portable-win64.zip  (carpeta portable: pasa mejor
+#        los antivirus porque no es autoextraible)
+#      * PoTranslator-portable-win64.zip.sha256
+#  - workflow_dispatch -> lanzable a mano.
 # ============================================================================
 name: Compilar EXE
 
@@ -36,30 +39,41 @@ jobs:
       - name: Instalar PyInstaller
         run: python -m pip install --upgrade pyinstaller
 
-      - name: Compilar PoTranslator.exe
+      - name: Compilar PoTranslator.exe (archivo unico)
         run: python -m PyInstaller PoTranslator.spec --noconfirm
 
-      - name: Generar checksum SHA256
+      - name: Compilar version portable (carpeta)
+        run: python -m PyInstaller PoTranslator-portable.spec --noconfirm
+
+      - name: Empaquetar portable en ZIP y generar checksums
         shell: pwsh
         run: |
-          $hash = (Get-FileHash dist/PoTranslator.exe -Algorithm SHA256).Hash
-          "$hash  PoTranslator.exe" | Out-File -Encoding ascii dist/PoTranslator.exe.sha256
-          echo "SHA256 de PoTranslator.exe: $hash"
+          Compress-Archive -Path dist/PoTranslator -DestinationPath dist/PoTranslator-portable-win64.zip
+          $h1 = (Get-FileHash dist/PoTranslator.exe -Algorithm SHA256).Hash
+          $h2 = (Get-FileHash dist/PoTranslator-portable-win64.zip -Algorithm SHA256).Hash
+          "$h1  PoTranslator.exe" | Out-File -Encoding ascii dist/PoTranslator.exe.sha256
+          "$h2  PoTranslator-portable-win64.zip" | Out-File -Encoding ascii dist/PoTranslator-portable-win64.zip.sha256
+          echo "SHA256 del exe: $h1"
+          echo "SHA256 del zip portable: $h2"
 
-      - name: Guardar el .exe como artefacto
+      - name: Guardar artefactos
         uses: actions/upload-artifact@v4
         with:
           name: PoTranslator-exe
           path: |
             dist/PoTranslator.exe
             dist/PoTranslator.exe.sha256
+            dist/PoTranslator-portable-win64.zip
+            dist/PoTranslator-portable-win64.zip.sha256
           if-no-files-found: error
 
-      - name: Crear Release con el .exe (solo en etiquetas v*)
+      - name: Crear Release (solo en etiquetas v*)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/PoTranslator.exe
             dist/PoTranslator.exe.sha256
+            dist/PoTranslator-portable-win64.zip
+            dist/PoTranslator-portable-win64.zip.sha256
           fail_on_unmatched_files: true
